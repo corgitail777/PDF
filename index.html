@@ -74,6 +74,45 @@ function detectStrokes(canvas,pageNo){
  }
  return lines;
 }
+
+// Stage 3-2B: pair the two vertical red edges as one rectangle.
+// The scanned top/bottom strokes may be faint, so their absence does not prevent closure.
+function findRedRectangles(strokes,pageNo){
+ const vertical=strokes.filter(s=>s.page===pageNo&&s.red&&s.dir==='v'&&s.h>.045);
+ const result=[];
+ for(let i=0;i<vertical.length;i++)for(let j=i+1;j<vertical.length;j++){
+  const a=vertical[i],b=vertical[j],left=Math.min(a.x,b.x),right=Math.max(a.x,b.x);
+  const width=right-left, overlap=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);
+  const minH=Math.min(a.h,b.h),maxH=Math.max(a.h,b.h);
+  if(width<.075||width>.48||overlap<minH*.65||Math.abs(a.y-b.y)>maxH*.22||Math.abs(a.y+a.h-b.y-b.h)>maxH*.22)continue;
+  const top=Math.min(a.y,b.y),bottom=Math.max(a.y+a.h,b.y+b.h);
+  const box={page:pageNo,x:left,y:top,w:width,h:bottom-top};
+  if(result.some(q=>Math.abs(q.x-box.x)<.008&&Math.abs(q.y-box.y)<.008))continue;
+  result.push(box);
+ }
+ return result;
+}
+function paintClosedRectangle(ws,box,cols,rs){
+ const clamp=(n,max)=>Math.max(1,Math.min(max,n));
+ const left=clamp(Math.round(box.x*cols)+1,cols),right=clamp(Math.round((box.x+box.w)*cols)+1,cols);
+ const top=clamp(Math.round(box.y*rs)+1,rs),bottom=clamp(Math.round((box.y+box.h)*rs)+1,rs);
+ const red={style:'thin',color:{argb:'FFDD4444'}};
+ if(right<=left||bottom<=top)return;
+ for(let c=left;c<=right;c++){
+  const t=ws.getCell(top,c),b=ws.getCell(bottom,c);
+  t.border={...t.border,top:red};b.border={...b.border,bottom:red};
+ }
+ for(let r=top;r<=bottom;r++){
+  const l=ws.getCell(r,left),rr=ws.getCell(r,right);
+  l.border={...l.border,left:red};rr.border={...rr.border,right:red};
+ }
+}
+function strokeBelongsToBox(stroke,box){
+ if(stroke.page!==box.page||!stroke.red)return false;
+ const tolerance=.015;
+ if(stroke.dir==='v')return (Math.abs(stroke.x-box.x)<tolerance||Math.abs(stroke.x-box.x-box.w)<tolerance)&&stroke.y>=box.y-tolerance&&stroke.y+stroke.h<=box.y+box.h+tolerance;
+ return stroke.x>=box.x-tolerance&&stroke.x+stroke.w<=box.x+box.w+tolerance&&(Math.abs(stroke.y-box.y)<tolerance||Math.abs(stroke.y-box.y-box.h)<tolerance);
+}
 function paintStroke(ws,line,cols,rs){
  const red=line.red;const style={style:'thin',color:{argb:red?'FFDD4444':'FF555555'}};
  const clamp=(n,max)=>Math.max(1,Math.min(max,n));
@@ -87,7 +126,7 @@ function paintStroke(ws,line,cols,rs){
 }
 function isRedText(r, image){if(!image)return false;const {data,width,height}=image;const x0=Math.max(0,Math.floor(r.x*width)),x1=Math.min(width,Math.ceil((r.x+r.w)*width)),y0=Math.max(0,Math.floor(r.y*height)),y1=Math.min(height,Math.ceil((r.y+r.h)*height));let red=0,dark=0;for(let y=y0;y<y1;y+=2)for(let x=x0;x<x1;x+=2){const i=(y*width+x)*4,a=data[i],b=data[i+1],c=data[i+2];if(a>105&&a>b*1.45&&a>c*1.45&&a-b>45)red++;else if(a<155&&b<155&&c<155)dark++;}return red>=3&&red>dark*.24;}
 function renderItems(){const root=$('items');root.replaceChildren();rows.forEach((r,i)=>{let div=document.createElement('div');div.className='item'+(r.conf<65?' low':'')+(selected===i?' selected':'');let label=document.createElement('small');label.textContent=`P${r.page} / ${Math.round(r.conf)}%`;let inp=document.createElement('input');inp.value=r.text;inp.setAttribute('aria-label',`ページ${r.page} 認識行${i+1}`);inp.addEventListener('input',()=>r.text=inp.value);inp.addEventListener('focus',async()=>{selected=i;document.querySelectorAll('.item.selected').forEach(e=>e.classList.remove('selected'));div.classList.add('selected');await drawPage(r.page)});div.append(label,inp);root.append(div)});if(!rows.length)root.textContent='文字が検出されませんでした。'}
-$('scan').onclick=async()=>{if(!pdf)return;$('scan').disabled=true;$('save').disabled=true;rows=[];redBoxes=[];detectedLines=[];pageInfo=[];selected=-1;let worker;try{if(!window.Tesseract||!window.ExcelJS)throw Error('外部ライブラリを読み込めません。ネットワーク制限を確認してください。');worker=await Tesseract.createWorker('jpn+eng',1,{logger:m=>{if(m.status==='recognizing text')status(`OCR: ${Math.round(m.progress*100)}%`)}});await worker.setParameters({preserve_interword_spaces:'1'});for(let n=1;n<=pdf.numPages;n++){status(`ページ ${n}/${pdf.numPages} を認識中`);const page=await pdf.getPage(n),v=page.getViewport({scale:2});const off=document.createElement('canvas');off.width=Math.ceil(v.width);off.height=Math.ceil(v.height);await page.render({canvasContext:off.getContext('2d'),viewport:v}).promise;const res=await worker.recognize(off);let lines=res.data.lines||[];const image=off.getContext('2d',{willReadFrequently:true}).getImageData(0,0,off.width,off.height);detectedLines.push(...detectStrokes(off,n));for(let line of lines){if(!(line.text||'').trim()||!line.bbox)continue;for(const block of splitLine(line,off.width,off.height,n)){block.red=isRedText(block,image);rows.push(block)}}pageInfo.push({page:n,width:page.view[2]-page.view[0],height:page.view[3]-page.view[1]})}rows.sort((a,b)=>a.page-b.page||a.y-b.y||a.x-b.x);renderItems();$('save').disabled=!rows.length;status(`${rows.length}行を認識しました。誤字を確認してください。`)}catch(err){status('解析エラー: '+err.message)}finally{if(worker)await worker.terminate();$('scan').disabled=false}};
+$('scan').onclick=async()=>{if(!pdf)return;$('scan').disabled=true;$('save').disabled=true;rows=[];redBoxes=[];detectedLines=[];pageInfo=[];selected=-1;let worker;try{if(!window.Tesseract||!window.ExcelJS)throw Error('外部ライブラリを読み込めません。ネットワーク制限を確認してください。');worker=await Tesseract.createWorker('jpn+eng',1,{logger:m=>{if(m.status==='recognizing text')status(`OCR: ${Math.round(m.progress*100)}%`)}});await worker.setParameters({preserve_interword_spaces:'1'});for(let n=1;n<=pdf.numPages;n++){status(`ページ ${n}/${pdf.numPages} を認識中`);const page=await pdf.getPage(n),v=page.getViewport({scale:2});const off=document.createElement('canvas');off.width=Math.ceil(v.width);off.height=Math.ceil(v.height);await page.render({canvasContext:off.getContext('2d'),viewport:v}).promise;const res=await worker.recognize(off);let lines=res.data.lines||[];const image=off.getContext('2d',{willReadFrequently:true}).getImageData(0,0,off.width,off.height);const strokes=detectStrokes(off,n);detectedLines.push(...strokes);redBoxes.push(...findRedRectangles(strokes,n));for(let line of lines){if(!(line.text||'').trim()||!line.bbox)continue;for(const block of splitLine(line,off.width,off.height,n)){block.red=isRedText(block,image);rows.push(block)}}pageInfo.push({page:n,width:page.view[2]-page.view[0],height:page.view[3]-page.view[1]})}rows.sort((a,b)=>a.page-b.page||a.y-b.y||a.x-b.x);renderItems();$('save').disabled=!rows.length;status(`${rows.length}行を認識しました。誤字を確認してください。`)}catch(err){status('解析エラー: '+err.message)}finally{if(worker)await worker.terminate();$('scan').disabled=false}};
 // Export-only spacing correction. Keep OCR inputs unchanged for manual review.
 function compactJapaneseSpacing(text){
  const jp='\u3040-\u30ff\u3400-\u9fff\uff00-\uffef';
@@ -117,11 +156,12 @@ $('save').onclick=async()=>{if(!rows.length)return;try{
    cell.alignment={vertical:'middle',horizontal:'left',wrapText:false,shrinkToFit:true};
   }
   // Independent OCR-free detection of red/black lines, including box edges and underlines.
-  for(const stroke of detectedLines.filter(x=>x.page===p))paintStroke(ws,stroke,colCount,rowCount);
+  for(const stroke of detectedLines.filter(x=>x.page===p&&!redBoxes.some(b=>strokeBelongsToBox(x,b))))paintStroke(ws,stroke,colCount,rowCount);
+  for(const box of redBoxes.filter(x=>x.page===p))paintClosedRectangle(ws,box,colCount,rowCount);
   ws.pageSetup.printArea=`A1:BH${rowCount}`;ws.views=[{showGridLines:false}];
  }
  const buf=await book.xlsx.writeBuffer();const url=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
- const a=document.createElement('a');a.href=url;a.download=($('file').files[0]?.name||'PDF').replace(/\.pdf$/i,'')+'_Stage3_2.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
- status('Stage 3-2 罫線検出版Excelを保存しました（配置・色・枠は推定です）');
+ const a=document.createElement('a');a.href=url;a.download=($('file').files[0]?.name||'PDF').replace(/\.pdf$/i,'')+'_Stage3_2B.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ status('Stage 3-2B 閉じた赤枠版Excelを保存しました（配置・色・枠は推定です）');
  }catch(err){status('Excel出力エラー: '+err.message)} };
 </script></body></html>
