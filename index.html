@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PDF→Excel 変換 Stage 3</title><style>body{font-family:system-ui,'Yu Gothic',sans-serif;margin:0;background:#f3f5f9;color:#1e293b}header{background:#17365d;color:white;padding:15px 24px;font-size:20px;font-weight:bold}main{padding:16px;max-width:1500px;margin:auto}.bar{background:white;border:1px solid #d9e1ed;border-radius:10px;padding:15px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}button{padding:10px 16px;background:#1768b2;color:white;border:0;border-radius:6px;cursor:pointer}button:disabled{background:#a7b0bb}input[type=file]{max-width:320px}.status{font-size:13px;color:#475569}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:15px}.panel{background:white;border:1px solid #d9e1ed;border-radius:10px;padding:12px;min-width:0}.panel h2{font-size:16px;margin:0 0 10px}.preview{overflow:auto;max-height:74vh;background:#e8edf3;text-align:center}.preview canvas{max-width:100%;height:auto;box-shadow:0 2px 9px #9ca3af;display:block;margin:auto}.items{max-height:70vh;overflow:auto}.item{border-bottom:1px solid #e2e8f0;padding:9px 4px;display:grid;grid-template-columns:65px 1fr;gap:8px;align-items:center}.item input{width:96%;box-sizing:border-box;padding:7px;font-size:14px}.item small{color:#64748b}.item.low{background:#fff5d7}.item.selected{outline:2px solid #e14b4b;outline-offset:-2px}.notice{font-size:13px;line-height:1.6;color:#475569;margin-top:12px}@media(max-width:850px){.cols{grid-template-columns:1fr}.preview{max-height:55vh}}.ocr-edit{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.ocr-edit input{flex:1;min-width:190px;width:auto}.retry,.candidate{padding:6px 9px;font-size:12px}.retry{background:#475569}.candidate{background:#e6effa;color:#183153;border:1px solid #bfd0e6}.choices{width:100%;font-size:12px;color:#64748b;display:flex;gap:5px;flex-wrap:wrap}</style></head><body><header>PDF → Excel 変換（Stage 3-3 OCR改善 / ブラウザ版）</header><main><div class="bar"><input id="file" type="file" accept="application/pdf,.pdf"><button id="scan" disabled>PDFを解析</button><button id="save" disabled>Excelを保存</button><span id="status" class="status">PDFを選択してください</span></div><div class="notice">PDFはブラウザ内で処理します。日本語OCRは初回に外部配信元から言語データを取得します。社内文書の取り扱い規程を確認してください。OCR誤認識は右側で修正できます。文字の再認識候補を追加しました。誤認識は必ず原本と照合してください。赤文字・赤枠の処理は前版のままです。</div><div class="cols"><section class="panel"><h2>PDF原本（選択行を赤枠表示）</h2><div class="preview"><canvas id="page"></canvas></div><div id="pages" class="status"></div></section><section class="panel"><h2>OCR結果（クリックして修正）</h2><div id="items" class="items">解析するとここに表示されます。</div></section></div></main>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PDF→Excel 変換 Stage 3</title><style>body{font-family:system-ui,'Yu Gothic',sans-serif;margin:0;background:#f3f5f9;color:#1e293b}header{background:#17365d;color:white;padding:15px 24px;font-size:20px;font-weight:bold}main{padding:16px;max-width:1500px;margin:auto}.bar{background:white;border:1px solid #d9e1ed;border-radius:10px;padding:15px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}button{padding:10px 16px;background:#1768b2;color:white;border:0;border-radius:6px;cursor:pointer}button:disabled{background:#a7b0bb}input[type=file]{max-width:320px}.status{font-size:13px;color:#475569}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:15px}.panel{background:white;border:1px solid #d9e1ed;border-radius:10px;padding:12px;min-width:0}.panel h2{font-size:16px;margin:0 0 10px}.preview{overflow:auto;max-height:74vh;background:#e8edf3;text-align:center}.preview canvas{max-width:100%;height:auto;box-shadow:0 2px 9px #9ca3af;display:block;margin:auto}.items{max-height:70vh;overflow:auto}.item{border-bottom:1px solid #e2e8f0;padding:9px 4px;display:grid;grid-template-columns:65px 1fr;gap:8px;align-items:center}.item input{width:96%;box-sizing:border-box;padding:7px;font-size:14px}.item small{color:#64748b}.item.low{background:#fff5d7}.item.selected{outline:2px solid #e14b4b;outline-offset:-2px}.notice{font-size:13px;line-height:1.6;color:#475569;margin-top:12px}@media(max-width:850px){.cols{grid-template-columns:1fr}.preview{max-height:55vh}}.ocr-edit{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.ocr-edit input{flex:1;min-width:190px;width:auto}.retry,.candidate{padding:6px 9px;font-size:12px}.retry{background:#475569}.candidate{background:#e6effa;color:#183153;border:1px solid #bfd0e6}.choices{width:100%;font-size:12px;color:#64748b;display:flex;gap:5px;flex-wrap:wrap}.item.reviewed{background:#eaf8ef}.item.reviewed.low{background:#eaf8ef}.reviewbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px;background:#f1f5f9;border-radius:6px}.reviewbar select{padding:5px}.reviewcheck{display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap}.reviewcheck input{width:auto}.review-summary{font-size:12px;color:#334155}</style></head><body><header>PDF → Excel 変換（Stage 3-4 OCR確認 / ブラウザ版）</header><main><div class="bar"><input id="file" type="file" accept="application/pdf,.pdf"><button id="scan" disabled>PDFを解析</button><button id="save" disabled>Excelを保存</button><span id="status" class="status">PDFを選択してください</span></div><div class="notice">PDFはブラウザ内で処理します。日本語OCRは初回に外部配信元から言語データを取得します。社内文書の取り扱い規程を確認してください。OCR誤認識は右側で修正できます。再認識候補を選んだ行・手修正した行は「修正済み」と表示します。原本と照合した行は「確認済み」にしてください。誤認識は必ず原本と照合してください。赤文字・赤枠の処理は前版のままです。</div><div class="cols"><section class="panel"><h2>PDF原本（選択行を赤枠表示）</h2><div class="preview"><canvas id="page"></canvas></div><div id="pages" class="status"></div></section><section class="panel"><h2>OCR結果（クリックして修正）</h2><div id="items" class="items">解析するとここに表示されます。</div></section></div></main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script><script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script><script>
 'use strict';
 const $=id=>document.getElementById(id), canvas=$('page'),ctx=canvas.getContext('2d');let pdf=null,rows=[],currentPage=1,pageInfo=[],selected=-1,redBoxes=[],detectedLines=[],pageCanvases=new Map(),ocrWorker=null;const status=s=>$('status').textContent=s;
@@ -164,17 +164,49 @@ async function reRecognize(row){
  }
  return out.sort((a,b)=>b.confidence-a.confidence);
 }
-function renderItems(){const root=$('items');root.replaceChildren();rows.forEach((r,i)=>{let div=document.createElement('div');div.className='item'+(r.conf<65?' low':'')+(selected===i?' selected':'');let label=document.createElement('small');label.textContent=`P${r.page} / ${Math.round(r.conf)}%`;let inp=document.createElement('input');inp.value=r.text;inp.setAttribute('aria-label',`ページ${r.page} 認識行${i+1}`);inp.addEventListener('input',()=>r.text=inp.value);inp.addEventListener('focus',async()=>{selected=i;document.querySelectorAll('.item.selected').forEach(e=>e.classList.remove('selected'));div.classList.add('selected');await drawPage(r.page)});const edit=document.createElement('div');edit.className='ocr-edit';edit.append(inp);
-const retry=document.createElement('button');retry.type='button';retry.className='retry';retry.textContent='再認識';retry.title='この範囲を日本語・英語で再認識し、候補を表示します';
-const choices=document.createElement('div');choices.className='choices';
-retry.onclick=async()=>{retry.disabled=true;retry.textContent='認識中…';choices.replaceChildren();try{
- const options=await reRecognize(r);const seen=new Set([r.text.trim()]);
- for(const o of options){if(!o.text||seen.has(o.text))continue;seen.add(o.text);
- const btn=document.createElement('button');btn.type='button';btn.className='candidate';btn.textContent=o.lang+'：'+o.text;
- btn.onclick=()=>{r.text=o.text;inp.value=o.text;choices.replaceChildren();status('候補を反映しました。原本と照合してください。')};choices.append(btn);}
- if(!choices.childNodes.length)choices.textContent='別の候補は得られませんでした。原本を見て修正してください。';
- }catch(err){choices.textContent='再認識エラー: '+err.message}finally{retry.disabled=false;retry.textContent='再認識'}};
-edit.append(retry,choices);div.append(label,edit);root.append(div)});if(!rows.length)root.textContent='文字が検出されませんでした。'}
+let reviewFilter='all';
+function updateReviewSummary(){
+ const reviewed=rows.filter(r=>r.reviewed).length;
+ const low=rows.filter(r=>r.conf<65&&!r.reviewed).length;
+ const el=$('reviewSummary');if(el)el.textContent=`全${rows.length}行 / 確認済み${reviewed}行 / 未確認${rows.length-reviewed}行（うち低信頼度${low}行）`;
+}
+function renderItems(){
+ const root=$('items');root.replaceChildren();
+ const bar=document.createElement('div');bar.className='reviewbar';
+ const summary=document.createElement('span');summary.id='reviewSummary';summary.className='review-summary';
+ const filter=document.createElement('select');filter.setAttribute('aria-label','表示するOCR行');
+ for(const [value,label] of [['all','すべて表示'],['unreviewed','未確認のみ'],['low','低信頼度・未確認']]){
+  const opt=document.createElement('option');opt.value=value;opt.textContent=label;filter.append(opt);
+ }
+ filter.value=reviewFilter;filter.onchange=()=>{reviewFilter=filter.value;renderItems()};
+ bar.append(summary,filter);root.append(bar);updateReviewSummary();
+ rows.forEach((r,i)=>{
+  if(reviewFilter==='unreviewed'&&r.reviewed)return;
+  if(reviewFilter==='low'&&(r.reviewed||r.conf>=65))return;
+  let div=document.createElement('div');div.className='item'+(r.conf<65?' low':'')+(r.reviewed?' reviewed':'')+(selected===i?' selected':'');
+  let label=document.createElement('small');label.textContent=`P${r.page} / ${Math.round(r.conf)}%`;
+  let inp=document.createElement('input');inp.value=r.text;inp.setAttribute('aria-label',`ページ${r.page} 認識行${i+1}`);
+  inp.addEventListener('input',()=>{r.text=inp.value;r.edited=true;r.reviewed=false;div.classList.remove('reviewed');check.checked=false;updateReviewSummary()});
+  inp.addEventListener('focus',async()=>{selected=i;document.querySelectorAll('.item.selected').forEach(e=>e.classList.remove('selected'));div.classList.add('selected');await drawPage(r.page)});
+  const edit=document.createElement('div');edit.className='ocr-edit';edit.append(inp);
+  const retry=document.createElement('button');retry.type='button';retry.className='retry';retry.textContent='再認識';retry.title='この範囲を日本語・英語で再認識し、候補を表示します';
+  const choices=document.createElement('div');choices.className='choices';
+  retry.onclick=async()=>{retry.disabled=true;retry.textContent='認識中…';choices.replaceChildren();try{
+   const options=await reRecognize(r);const seen=new Set([r.text.trim()]);
+   for(const o of options){if(!o.text||seen.has(o.text))continue;seen.add(o.text);
+    const btn=document.createElement('button');btn.type='button';btn.className='candidate';btn.textContent=o.lang+'：'+o.text;
+    btn.onclick=()=>{r.text=o.text;r.edited=true;r.reviewed=false;inp.value=o.text;check.checked=false;div.classList.remove('reviewed');choices.replaceChildren();updateReviewSummary();status('候補を反映しました。原本と照合して「確認済み」にしてください。')};choices.append(btn);
+   }
+   if(!choices.childNodes.length)choices.textContent='別の候補は得られませんでした。原本を見て修正してください。';
+  }catch(err){choices.textContent='再認識エラー: '+err.message}finally{retry.disabled=false;retry.textContent='再認識'}};
+  const checkLabel=document.createElement('label');checkLabel.className='reviewcheck';
+  const check=document.createElement('input');check.type='checkbox';check.checked=!!r.reviewed;
+  check.onchange=()=>{r.reviewed=check.checked;div.classList.toggle('reviewed',r.reviewed);updateReviewSummary()};
+  checkLabel.append(check,document.createTextNode('原本と照合済み'));
+  edit.append(retry,checkLabel,choices);div.append(label,edit);root.append(div);
+ });
+ if(!rows.length){const msg=document.createElement('div');msg.textContent='文字が検出されませんでした。';root.append(msg)}
+}
 $('scan').onclick=async()=>{if(!pdf)return;$('scan').disabled=true;$('save').disabled=true;rows=[];redBoxes=[];detectedLines=[];pageInfo=[];selected=-1;let worker;try{if(ocrWorker){await ocrWorker.terminate();ocrWorker=null;}if(!window.Tesseract||!window.ExcelJS)throw Error('外部ライブラリを読み込めません。ネットワーク制限を確認してください。');worker=await Tesseract.createWorker('jpn+eng',1,{logger:m=>{if(m.status==='recognizing text')status(`OCR: ${Math.round(m.progress*100)}%`)}});await worker.setParameters({preserve_interword_spaces:'1'});for(let n=1;n<=pdf.numPages;n++){status(`ページ ${n}/${pdf.numPages} を認識中`);const page=await pdf.getPage(n),v=page.getViewport({scale:2});const off=document.createElement('canvas');off.width=Math.ceil(v.width);off.height=Math.ceil(v.height);await page.render({canvasContext:off.getContext('2d'),viewport:v}).promise;pageCanvases.set(n,off);const res=await worker.recognize(off);let lines=res.data.lines||[];const image=off.getContext('2d',{willReadFrequently:true}).getImageData(0,0,off.width,off.height);const strokes=detectStrokes(off,n);detectedLines.push(...strokes);redBoxes.push(...findRedRectangles(strokes,n));for(let line of lines){if(!(line.text||'').trim()||!line.bbox)continue;for(const block of splitLine(line,off.width,off.height,n)){block.red=isRedText(block,image);rows.push(block)}}pageInfo.push({page:n,width:page.view[2]-page.view[0],height:page.view[3]-page.view[1]})}rows.sort((a,b)=>a.page-b.page||a.y-b.y||a.x-b.x);renderItems();$('save').disabled=!rows.length;status(`${rows.length}行を認識しました。誤字を確認してください。`)}catch(err){status('解析エラー: '+err.message)}finally{ocrWorker=worker||null;$('scan').disabled=false}};
 // Export-only spacing correction. Keep OCR inputs unchanged for manual review.
 function compactJapaneseSpacing(text){
@@ -182,8 +214,8 @@ function compactJapaneseSpacing(text){
  // Remove only gaps separating two Japanese characters; preserve Latin/numeric spacing.
  return String(text).replace(new RegExp('(['+jp+'])[ \u3000]+(?=['+jp+'])','g'),'$1');
 }
-$('save').onclick=async()=>{if(!rows.length)return;try{
- const book=new ExcelJS.Workbook();book.creator='PDFExcel Web Stage 3-2C Borders';
+$('save').onclick=async()=>{if(!rows.length)return;const remaining=rows.filter(r=>!r.reviewed).length;if(remaining&&!confirm(`未確認の行が${remaining}件あります。\nOCR誤認識が残っている可能性があります。\nこのままExcelを保存しますか？`))return;try{
+ const book=new ExcelJS.Workbook();book.creator='PDFExcel Web Stage 3-4 Review';
  for(let p=1;p<=pdf.numPages;p++){
   const info=pageInfo.find(i=>i.page===p);const landscape=info&&info.width>info.height;
   const ws=book.addWorksheet('Page '+p,{pageSetup:{paperSize:9,orientation:landscape?'landscape':'portrait',fitToPage:true,fitToWidth:1,fitToHeight:1}});
@@ -210,7 +242,7 @@ $('save').onclick=async()=>{if(!rows.length)return;try{
   ws.pageSetup.printArea=`A1:BH${rowCount}`;ws.views=[{showGridLines:false}];
  }
  const buf=await book.xlsx.writeBuffer();const url=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
- const a=document.createElement('a');a.href=url;a.download=($('file').files[0]?.name||'PDF').replace(/\.pdf$/i,'')+'_Stage3_3.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
- status('Stage 3-3 Excelを保存しました（配置・色・枠は推定です）');
+ const a=document.createElement('a');a.href=url;a.download=($('file').files[0]?.name||'PDF').replace(/\.pdf$/i,'')+'_Stage3_4.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ status('Stage 3-4 Excelを保存しました（配置・色・枠は推定です）');
  }catch(err){status('Excel出力エラー: '+err.message)} };
 </script></body></html>
